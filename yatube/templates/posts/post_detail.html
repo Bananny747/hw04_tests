@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %} Пост {{ title }} {% endblock  %}
+
+{% block content %}
+  <div class="row">
+    <aside class="col-12 col-md-3">
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">
+          Дата публикации: {{ post.pub_date|date:"d E Y" }} 
+        </li>
+        {% if post.group %}
+          <li class="list-group-item">
+            Группа: {{ post.group.title }}
+            <a href="{% url 'posts:group_post' post.group.slug %}">
+              все записи группы
+            </a>
+          </li>
+        {% endif %} 
+        <li class="list-group-item">
+          Автор: {% if post.author.get_full_name %}
+            {{ post.author.get_full_name }}
+          {% else %}
+            {{ post.author }}
+          {% endif %}
+        </li>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          Всего постов автора:  <span >{{ count }}</span>
+        </li>
+        <li class="list-group-item">
+          <a href="{% url 'posts:profile' post.author.username %}">
+            все посты пользователя
+          </a>
+        </li>
+      </ul>
+    </aside>
+    <article class="col-12 col-md-9">
+      <p>
+        {{ post.text }}
+      </p>
+      {% if user.id == post.author.id %}
+      <!-- что бы запомнить:
+      Лаконичнее сравнить экземпляры модели между собой.
+      Это сравнит их первичные ключи (ПК). -->
+        <a class="btn btn-primary" href="{% url 'posts:post_edit' post.id %}">
+          редактировать запись
+        </a>
+      {% endif %}
+    </article>
+  </div> 
+{% endblock  %}
