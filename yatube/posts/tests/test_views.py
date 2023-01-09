@@ -72,6 +72,19 @@ class PostsPagesTests(TestCase):
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
+    def test_index_page_show_correct_context(self):
+        """Шаблон index сформирован с правильным контекстом."""
+        response = self.client.get(reverse('posts:index'))
+        # Взяли первый элемент из списка и проверили, что его содержание
+        # совпадает с ожидаемым
+        first_object = response.context['page_obj'][0]
+        post_text_0 = first_object.text
+        post_author_0 = first_object.author
+        post_group_0 = first_object.group
+        self.assertEqual(post_text_0, 'Тестовый пост')
+        self.assertEqual(post_author_0, PostsPagesTests.user)
+        self.assertEqual(post_group_0, PostsPagesTests.group)
+
     def test_post_create_edit_page_show_correct_context(self):
         """Шаблоны post_create, _edit сформированы с правильным контекстом."""
         urls = (
@@ -132,7 +145,6 @@ class PaginatorViewsTest(TestCase):
         )
         posts = [
             Post(
-                id=n,
                 author=cls.user,
                 group=cls.group,
                 text=f'Тестовый пост {n}') for n in range(1, 14)
@@ -155,16 +167,3 @@ class PaginatorViewsTest(TestCase):
             # Проверка: на второй странице должно быть три поста.
             response = self.client.get(reverse(url, args=args) + '?page=2')
             self.assertEqual(len(response.context['page_obj']), 3)
-
-    def test_paginator_page_show_correct_context(self):
-        """Шаблоны использующие paginator сформированы с нужным контекстом."""
-        response = self.client.get(reverse('posts:index'))
-        # Взяли первый элемент из списка и проверили, что его содержание
-        # совпадает с ожидаемым
-        first_object = response.context['page_obj'][0]
-        post_text_0 = first_object.text
-        post_author_0 = first_object.author
-        post_group_0 = first_object.group
-        self.assertEqual(post_text_0, 'Тестовый пост 1')
-        self.assertEqual(post_author_0, PaginatorViewsTest.user)
-        self.assertEqual(post_group_0, PaginatorViewsTest.group)
