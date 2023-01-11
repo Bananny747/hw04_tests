@@ -4,7 +4,7 @@
 
 {% block content %}     
   <h1>Все посты пользователя {{ author.username }} </h1>
-  <h3>Всего постов: {{ count }} </h3>   
+  <h3>Всего постов: {{ author.post.count }} </h3>   
   {% for post in page_obj %}
     {% include 'includes/post_card.html' with stats='profile' %}
     {% if not forloop.last %}<hr>{% endif %}

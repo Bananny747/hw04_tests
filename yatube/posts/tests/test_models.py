@@ -28,3 +28,16 @@ class PostModelTest(TestCase):
         expected_post_value = post.text[:15]
         self.assertEqual(expected_group_value, str(group))
         self.assertEqual(expected_post_value, str(post))
+
+    # Вроде бы не являлось обязательной задачей, но я добавил
+    def test_models_have_correct_object_names(self):
+        """Проверяем, что у модели Post корректно работает
+        verbose_name и help_text."""
+        post = PostModelTest.post
+        self.assertEqual(
+            post._meta.get_field('text').verbose_name,
+            'Текст поста')
+        self.assertEqual(
+            post._meta.get_field('text').help_text,
+            'Напишите что-то, за что не будет стыдно')
+        self.assertEqual(post._meta.get_field('group').verbose_name, 'Группа')

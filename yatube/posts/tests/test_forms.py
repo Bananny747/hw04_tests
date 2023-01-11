@@ -1,5 +1,5 @@
 from ..forms import PostForm
-from ..models import Post
+from ..models import Post, Group
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -13,9 +13,20 @@ class PostCreateEditFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(username='auth')
+        cls.old_group = Group.objects.create(
+            title='Тестовая старая группа',
+            slug='test_old_group',
+            description='Описание старой тестовой группы',
+        )
         cls.post = Post.objects.create(
             author=cls.user,
             text='Тестовый пост ожидает редактирования',
+            group=cls.old_group,
+        )
+        cls.group = Group.objects.create(
+            title='Тестовая группа',
+            slug='test_group',
+            description='Описание тестовой группы',
         )
         # Создаем форму, если нужна проверка атрибутов
         cls.form = PostForm()
@@ -32,6 +43,7 @@ class PostCreateEditFormTests(TestCase):
         posts_count = Post.objects.count()
         form_data = {
             'text': 'Тестовый текст',
+            'group': PostCreateEditFormTests.group.id,
         }
         # Отправляем POST-запрос
         response = self.authorized_client.post(
@@ -39,16 +51,21 @@ class PostCreateEditFormTests(TestCase):
             data=form_data,
             follow=True
         )
+        # Через Post.objects.last() отказывался работать
+        new_post = Post.objects.filter(text='Тестовый текст')[0]
         # Проверяем, сработал ли редирект
         self.assertRedirects(response, reverse(
             'posts:profile', args=[PostCreateEditFormTests.user.username]))
         # Проверяем, увеличилось ли число постов
         self.assertEqual(Post.objects.count(), posts_count + 1)
+        self.assertEqual(new_post.author, PostCreateEditFormTests.user)
+        self.assertEqual(new_post.group, PostCreateEditFormTests.group)
 
     def test_edit_post(self):
         """Валидная форма редактирует запись в Post."""
         form_data = {
             'text': 'Тестовый пост дождался редактирования',
+            'group': PostCreateEditFormTests.group.id,
         }
         # Отправляем POST-запрос
         response = self.authorized_client.post(
@@ -63,6 +80,19 @@ class PostCreateEditFormTests(TestCase):
         self.assertEqual(
             Post.objects.get(pk=PostCreateEditFormTests.post.pk).text,
             form_data['text']
+        )
+        self.assertEqual(
+            Post.objects.get(pk=PostCreateEditFormTests.post.pk).group.id,
+            form_data['group']
+        )
+        # Проверяем, что пост изчез из старой группы
+        old_group_response = self.authorized_client.get(
+            reverse('posts:group_post',
+                    args=[PostCreateEditFormTests.old_group.slug])
+        )
+        self.assertEqual(
+            old_group_response.context['page_obj'].paginator.count,
+            0
         )
 
     def test_create_user(self):

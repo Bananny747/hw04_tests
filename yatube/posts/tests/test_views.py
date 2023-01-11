@@ -78,12 +78,9 @@ class PostsPagesTests(TestCase):
         # Взяли первый элемент из списка и проверили, что его содержание
         # совпадает с ожидаемым
         first_object = response.context['page_obj'][0]
-        post_text_0 = first_object.text
-        post_author_0 = first_object.author
-        post_group_0 = first_object.group
-        self.assertEqual(post_text_0, 'Тестовый пост')
-        self.assertEqual(post_author_0, PostsPagesTests.user)
-        self.assertEqual(post_group_0, PostsPagesTests.group)
+        self.assertEqual(first_object.text, 'Тестовый пост')
+        self.assertEqual(first_object.author, PostsPagesTests.user)
+        self.assertEqual(first_object.group, PostsPagesTests.group)
 
     def test_post_create_edit_page_show_correct_context(self):
         """Шаблоны post_create, _edit сформированы с правильным контекстом."""
@@ -157,12 +154,14 @@ class PaginatorViewsTest(TestCase):
         )
 
     def test_first_page_contains_ten_records(self):
+        """Проверка количества постов на 1 странице."""
         for url, args in self.urls:
             response = self.client.get(reverse(url, args=args))
             # Проверка: количество постов на первой странице равно 10.
             self.assertEqual(len(response.context['page_obj']), 10)
 
     def test_second_page_contains_three_records(self):
+        """Проверка количества постов на 2 странице."""
         for url, args in self.urls:
             # Проверка: на второй странице должно быть три поста.
             response = self.client.get(reverse(url, args=args) + '?page=2')

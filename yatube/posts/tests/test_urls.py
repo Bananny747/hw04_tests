@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
+from http import HTTPStatus
 
 from ..models import Group, Post
 
@@ -46,9 +47,10 @@ class PostsURLTests(TestCase):
         for url in url_for_all:
             with self.subTest(url=url):
                 response = self.guest_client.get(url)
-                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_post_redirect_not_author(self):
+        """Не автор пытается изменить пост."""
         response = self.authorized_client.get(
             f'/posts/{PostsURLTests.post2.id}/edit/',
             follow=True
@@ -59,14 +61,16 @@ class PostsURLTests(TestCase):
         )
 
     def test_create_url_redirect_anonymous_on_login(self):
+        """Незарегистрированный пользователь пытается создать пост."""
         response = self.guest_client.get('/create/', follow=True)
         self.assertRedirects(
             response, '/auth/login/?next=/create/'
         )
 
     def test_unexisting_page(self):
+        """Несуществующая страница."""
         response = self.guest_client.get('/unexisting_page/')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -83,3 +87,23 @@ class PostsURLTests(TestCase):
             with self.subTest(address=address):
                 response = self.authorized_client.get(address)
                 self.assertTemplateUsed(response, template)
+
+# В файле должны быть тесты:
+# 1. Страницы доступны и работают:
+#    + 1) главная страница `/`,
+#    + 2) страница группы `/group/<slug>/`,
+#      3) страница создания поста `/new/`:
+#    +  a) доступа только зарегистрированным пользователям;
+#    + 4) профайла пользователя `/<username>/`;
+#    + 5) отдельного поста `/<username>/<post_id>/`;
+# 2. Для следующих страниц вызываются ожидаемые шаблоны, при обращении
+#       к ним по URL:
+#    + 1) главная страница `/`,
+#    + 2) страница группы `/group/<slug>/`,
+#    + 3) страница создания поста `/new/`
+# 3. Для страницы редактирования поста `/<username>/<post_id>/edit/` для:
+#    + 1) у анонимного пользователя должен проверяться редирект.
+#    + 2) у авторизованного пользователя, автора поста нужно проверить какой
+#       вызывается шаблон.
+#    + 3) у авторизованного пользователя — не автора поста должен проверяться
+#       редирект.
