@@ -76,8 +76,8 @@ def post_edit(request, post_id):
         return redirect('posts:post_detail', post_id=post_id)
     form = PostForm(request.POST or None, instance=post)
     context = {
-        'form': form, 
-        'is_edit': True, 
+        'form': form,
+        'is_edit': True,
         'post_id': post_id}
     # понял, что проверка типа запроса не обязательна, т.к. если валидна,
     # значит и был запрос пост, но пока хочу оставить, чтобы потом вспомнить
